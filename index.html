@@ -1,0 +1,129 @@
+<!--Declara la versión de HTML que el documento está utilizando.-->
+<!DOCTYPE html>
+<!--Abre la etiqueta raíz del documento HTML y especifica el idioma principal del contenido (en este caso, inglés).-->
+<html lang="en">
+<!--Abre la sección de encabezado del documento, donde se colocan metadatos y enlaces a recursos externos.-->
+<head>
+    <!--Especifica el conjunto de caracteres (UTF-8) utilizado para codificar el contenido del documento-->
+    <meta charset="UTF-8">
+    <!--Define cómo el navegador debe controlar las dimensiones y la escala de la página en diferentes dispositivos.-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--Establece el título del documento, que se muestra en la barra de título del navegador o en la pestaña del navegador.-->
+    <title>Document</title>
+    <!--Enlaza la hoja de estilos externa "style.css" con el documento HTML para aplicar estilos al contenido.-->
+    <link rel="stylesheet" href="style.css">
+    <!--Cierra la sección de encabezado del documento.-->
+</head>
+<!--Abre la sección del cuerpo del documento, donde se coloca el contenido visible del sitio web.-->
+<body>
+    <!--Inserta un elemento <canvas> en el cuerpo del documento con el ID "pizarra". Este elemento se utilizará para dibujar gráficos, animaciones, o cualquier otro contenido gráfico dinámico utilizando JavaScript.-->
+    <canvas id="pizarra"></canvas>
+</body>
+<!--Cierra la sección del cuerpo del documento.-->
+</html>
+<!--Cierra la etiqueta raíz del documento HTML.-->
+<script>
+    //======================================================================
+    // VARIABLES
+    //======================================================================
+    /*Esta línea selecciona un elemento HTML con el ID `pizarra*/
+    let miCanvas = document.querySelector('#pizarra');
+    /*Se declara una variable llamada `lineas` como un arreglo vacío. Esta variable se utilizará para almacenar información sobre las líneas dibujadas en el lienzo. */
+    let lineas = [];
+    /* Se declara una variable `correccionX` e inicializa su valor en 0*/
+    let correccionX = 0;
+    /*Se declara una variable `correccionY` e inicializa su valor en 0*/
+    let correccionY = 0;
+    /*Se declara una variable `pintarLinea` e inicializa su valor en `false` */
+    let pintarLinea = false;
+    // Marca el nuevo punto
+    let nuevaPosicionX = 0;
+    let nuevaPosicionY = 0;
+    /*Esta línea utiliza el método `getBoundingClientRect()` en el elemento `miCanvas` para obtener un objeto `DOMRect ` que representa las dimensiones del lienzo (`<canvas>`) en relación con el área de visualización del navegador. */
+    let posicion = miCanvas.getBoundingClientRect()
+    correccionX = posicion.x;
+    correccionY = posicion.y;
+
+    miCanvas.width = 500;
+    miCanvas.height = 500;
+
+    //======================================================================
+    // FUNCIONES
+    //======================================================================
+
+    /**
+     * Funcion que empieza a dibujar la linea
+     */
+    function empezarDibujo () {
+        pintarLinea = true;
+        lineas.push([]);
+    };
+
+    /**
+     * Funcion que guarda la posicion de la nueva línea
+     */
+    function guardarLinea() {
+        lineas[lineas.length - 1].push({
+            x: nuevaPosicionX,
+            y: nuevaPosicionY
+        });
+    }
+
+    /**
+     * Funcion dibuja la linea
+     */
+    function dibujarLinea (event) {
+        event.preventDefault();
+        if (pintarLinea) {
+            let ctx = miCanvas.getContext('2d')
+            // Estilos de linea
+            ctx.lineJoin = ctx.lineCap = 'round';
+            ctx.lineWidth = 10;
+            // Color de la linea
+            ctx.strokeStyle = '#fff';
+            // Marca el nuevo punto
+            if (event.changedTouches == undefined) {
+                // Versión ratón
+                nuevaPosicionX = event.layerX;
+                nuevaPosicionY = event.layerY;
+            } else {
+                // Versión touch, pantalla tactil
+                nuevaPosicionX = event.changedTouches[0].pageX - correccionX;
+                nuevaPosicionY = event.changedTouches[0].pageY - correccionY;
+            }
+            // Guarda la linea
+            guardarLinea();
+            // Redibuja todas las lineas guardadas
+            ctx.beginPath();
+            lineas.forEach(function (segmento) {
+                ctx.moveTo(segmento[0].x, segmento[0].y);
+                segmento.forEach(function (punto, index) {
+                    ctx.lineTo(punto.x, punto.y);
+                });
+            });
+            ctx.stroke();
+        }
+    }
+
+    /**
+     * Funcion que deja de dibujar la linea
+     */
+    function pararDibujar () {
+        pintarLinea = false;
+        guardarLinea();
+    }
+
+    //======================================================================
+    // EVENTOS
+    //======================================================================
+
+    // Eventos raton
+    miCanvas.addEventListener('mousedown', empezarDibujo, false);
+    miCanvas.addEventListener('mousemove', dibujarLinea, false);
+    miCanvas.addEventListener('mouseup', pararDibujar, false);
+
+    // Eventos pantallas táctiles
+    miCanvas.addEventListener('touchstart', empezarDibujo, false);
+    miCanvas.addEventListener('touchmove', dibujarLinea, false);
+
+</script>
